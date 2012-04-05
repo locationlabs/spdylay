@@ -570,6 +570,14 @@ void htdocs_on_request_recv_callback
   prepare_response(hd->get_stream(stream_id), hd);
 }
 
+void proxy_on_request_recv_callback
+(spdylay_session *session, int32_t stream_id, void *user_data)
+{
+  SpdyEventHandler *hd = (SpdyEventHandler*)user_data;
+  prepare_response(hd->get_stream(stream_id), hd);
+}
+
+
 namespace {
 void hd_on_ctrl_send_callback
 (spdylay_session *session, spdylay_frame_type type, spdylay_frame *frame,
@@ -588,7 +596,9 @@ void on_data_chunk_recv_callback
 (spdylay_session *session, uint8_t flags, int32_t stream_id,
  const uint8_t *data, size_t len, void *user_data)
 {
-  // TODO Handle POST
+  SpdyEventHandler *hd = (SpdyEventHandler*)user_data;
+  Request *req = hd->get_stream(stream_id)
+  req->request_body.append(data, len);
 }
 } // namespace
 
@@ -597,7 +607,6 @@ void hd_on_data_recv_callback
 (spdylay_session *session, uint8_t flags, int32_t stream_id, int32_t length,
  void *user_data)
 {
-  // TODO Handle POST
   SpdyEventHandler *hd = (SpdyEventHandler*)user_data;
   if(hd->config()->verbose) {
     print_session_id(hd->session_id());

@@ -66,6 +66,9 @@ void print_help(std::ostream& out)
       << "                       specified, the document root is the current\n"
       << "                       working directory.\n"
       << "\n"
+      << "    -x, --proxy=host:port  Specify host:port to proxy requests to.\n"
+      << "                       If this is specified it overrides --htdocs.\n"
+      << "\n"
       << "    -v, --verbose      Print debug information such as reception/\n"
       << "                       transmission of frames and name/value pairs.\n"
       << "\n"
@@ -86,10 +89,11 @@ int main(int argc, char **argv)
       {"help", no_argument, 0, 'h' },
       {"verbose", no_argument, 0, 'v' },
       {"spdy3", no_argument, 0, '3' },
+      {"proxy", required_argument, 0, 'x' },
       {0, 0, 0, 0 }
     };
     int option_index = 0;
-    int c = getopt_long(argc, argv, "Dd:hv3", long_options, &option_index);
+    int c = getopt_long(argc, argv, "Dd:hv3x", long_options, &option_index);
     if(c == -1) {
       break;
     }
@@ -108,6 +112,9 @@ int main(int argc, char **argv)
       break;
     case '3':
       config.spdy3_only = true;
+      break;
+    case 'x':
+      config.proxy_hostport = optarg;
       break;
     case '?':
       exit(EXIT_FAILURE);
@@ -146,6 +153,9 @@ int main(int argc, char **argv)
   config.private_key_file = argv[optind++];
   config.cert_file = argv[optind++];
   config.on_request_recv_callback = htdocs_on_request_recv_callback;
+  if (!config.proxy_hostport.empty()) {
+    config.on_request_recv_callback = proxy_on_request_recv_callback;
+  }
   ssl_debug = config.verbose;
 
   SpdyServer server(&config);

@@ -49,6 +49,10 @@ struct Config {
   std::string private_key_file;
   std::string cert_file;
   spdylay_on_request_recv_callback on_request_recv_callback;
+
+  // The host:port pair to proxy the request to.  Requests are
+  // converted to HTTP to be proxied.
+  std::string proxy_hostport;
   void *data_ptr;
   bool spdy3_only;
   Config();
@@ -86,7 +90,10 @@ struct Request {
   int32_t stream_id;
   std::vector<std::pair<std::string, std::string> > headers;
   int file;
+  // response_body.first is the response body and response_body.second is the
+  // number of bytes of the body already sent.
   std::pair<std::string, size_t> response_body;
+  std::string request_body;
   Request(int32_t stream_id);
   ~Request();
 };
